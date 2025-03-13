@@ -1,5 +1,6 @@
 library(shiny)
 library(DT)
+library(readr)
 source('R/Functions.R')
 
 shinyServer
@@ -10,44 +11,42 @@ shinyServer
     
     # Display running message
     jobStatus <- reactiveValues(running=FALSE) 
-    output$runningMessage <- renderUI({
+    output$runningMessage <- renderText({
       if (jobStatus$running) {
-        return(tags$div(
-          class = "alert alert-info",
-          "Calculating... "
+        "Calculating... "
         ))
       } else {
         return(NULL)
       }
     })
     
-    observeEvent
-    (
-      input$go,
-      {
+    observeEvent(input$go, {
         jobStatus$running = TRUE
         updateActionButton(session, "go", label = "Running")
         
         # Prep data
-        data <- read.csv(input$df) %>%
-          select(all_of(c(input$envCol, input$traitCol, input$genotypeCol))) %>% 
-          filter(!is.na(.data[[input$envCol]] & !is.n(.data[[input$genotypeCol]])))
+        data <- input$df$datapath %>%
+          read_csv() %>%
+          select(input$envCol, input$traitCol, input$genotypeCol) #%>% 
+          # filter(!is.na(.data[[input$envCol]] & !is.na(.data[[input$genotypeCol]])))
         genotypes <- unique(data[[input$genotypeCol]])
-        num_genotypes <- length(genotypes)
+        num_genotypes <- length(genotypes) - 1
+        print(num_genotypes)
         genotypePairs <- tibble()
-        for(i in 1:(num_genotypes - 1))
+        for(i in 1:num_genotypes)
         {
-          df <- tibble(genotype1 = allGenotypes[i], genotype2 = allGenotypes[(i + 1):num_genotypes])
+          df <- tibble(genotype1 = genotypes[i], genotype2 = genotypes[(i + 1):num_genotypes])
           genotypePairs <- bind_rows(genotypePairs, df)
         }
-        environments <- unique(data[[input$envCol]])
         
         data_summary <- data %>% 
-          group_by(all_of(c(input$envCol, input$genotypeCol))) %>% 
-          summarise(traitMean = mean(.data[[input$traitCol]]))
-        
+          group_by(.data[[input$envCol]], .data[[input$genotypeCol]]) %>% 
+          summarise(traitMean = mean(.data[[input$traitCol]])) %>% 
+          rename(genotype = .data[[input$genotypeCol]],
+                 environment = .data[[input$envCol]])
         # Run computations
-        interactionScores <- getSignificantCrossovers(data, input$traitCol, environments)
+        interactionScores <- getSignificantCrossovers(data, input$traitCol, input$envCol, genotypePairs)
+        print('scores done')
         importantInteractionScores <- interactionScores %>% 
           select(genotype1, genotype2, contains('Score')) %>% 
           select(!contains('Normalized')) %>% 
@@ -59,13 +58,13 @@ shinyServer
                  environment2 = str_remove(interaction, paste0(input$traitCol, 'Score.E')) %>% 
                    str_split_i('-.E', 2)) %>% 
           select(!interaction) %>% 
-          left_join(data_summary, join_by(genotype1==y[[input$genotypeCol]], environment1==y[[input$envCol]])) %>% 
+          left_join(data_summary, join_by(genotype1==y$genotype, environment1==y$environment)) %>% 
           rename(meanG1E1 = traitMean) %>% 
-          left_join(data_summary, join_by(genotype2==y[[input$genotypeCol]], environment1==y[[input$envCol]])) %>% 
+          left_join(data_summary, join_by(genotype2==y$genotype, environment1==y$environment)) %>% 
           rename(meanG2E1 = traitMean) %>% 
-          left_join(data_summary, join_by(genotype1==y[[input$genotypeCol]], environment2==y[[input$envCol]])) %>% 
+          left_join(data_summary, join_by(genotype1==y$genotype, environment2==y$environment)) %>% 
           rename(meanG1E2 = traitMean) %>% 
-          left_join(data_summary, join_by(genotype2==y[[input$genotypeCol]], environment2==y[[input$envCol]])) %>% 
+          left_join(data_summary, join_by(genotype2==y$genotype, environment2==y$environment)) %>% 
           rename(meanG2E2 = traitMean)
         
         # render outputs
