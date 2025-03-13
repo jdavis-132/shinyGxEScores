@@ -35,9 +35,9 @@ shinyServer
         genotypes <- unique(data[[input$genotypeCol]])
         num_genotypes <- length(genotypes)
         genotypePairs <- tibble()
-        for(i in 1:(totalGenotypes - 1))
+        for(i in 1:(num_genotypes - 1))
         {
-          df <- tibble(genotype1 = allGenotypes[i], genotype2 = allGenotypes[(i + 1):totalGenotypes])
+          df <- tibble(genotype1 = allGenotypes[i], genotype2 = allGenotypes[(i + 1):num_genotypes])
           genotypePairs <- bind_rows(genotypePairs, df)
         }
         environments <- unique(data[[input$envCol]])
