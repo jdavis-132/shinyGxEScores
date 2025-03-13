@@ -4,7 +4,7 @@ library(tidyverse)
 # Remove dashes from genotype names before using so we can split the comparisons in the tukey step
 getSignificantCrossovers <- function(data, pheno, environments)
 {
-  phenotype <- paste0(pheno, '.sp')
+  phenotype <- paste0(pheno)
   phenotypeMean <- paste0(pheno, 'Mean')
   phenotypeRank <- paste0(pheno, 'Rank')
   phenotypeAdjustedP <- paste0(pheno, 'AdjP')
@@ -114,7 +114,7 @@ plotInteractionImportanceGrid <- function(significantInteractionsData = sigCross
                                           legendTextHJust = 1, xAxisLabelAngle = 0)
 {
   phenotype <- trait
-  phenotypeSpatial <- paste0(phenotype, '.sp')
+  phenotypeSpatial <- paste0(phenotype)
   phenotypeLabel <- traitLabel
   phenotypeScoreNormalized <- paste0(phenotype, 'ScoreNormalized')
   
