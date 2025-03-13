@@ -73,7 +73,14 @@ shinyServer
                                               traitLabel = input$traitCol)
         output$interactionImportanceGrid <- renderPlot(grid)
         output$importantInteractions <- renderDT(importantInteractionScores)
-        
+        output$interactionImportanceScoreExample <- renderImage(
+          {
+            filename <- normalizePath(file.path('./images/example.png'))
+            list(src = filename)
+          }, 
+          deleteFile = FALSE)
+        jobStatus$running = FALSE
+        updateActionButton(session, "go", label = "GO")
       }
     )
   }
