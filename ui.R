@@ -20,8 +20,7 @@ shinyUI
     (
       # Display running message
       textOutput("runningMessage"),
-      imageOutput("interactionImportanceScoreExample"),
-      textOutput("gridNote"),
+      imageOutput("interactionImportanceScoreExample", height='100%'),
       plotOutput("interactionImportanceGrid"), 
       dataTableOutput("importantInteractions")
     )
