@@ -1,5 +1,5 @@
 library(tidyverse)
-library(lme4)
+library(lm)
 library(viridis)
 # Modifies dataframe genotypePairs with columns genotype1 and genotype2 at a minimum that identify all pairwise comparisons between genotypes
 # Remove dashes from genotype names before using so we can split the comparisons in the tukey step
@@ -132,16 +132,17 @@ plotInteractionImportanceGrid <- function(significantInteractionsData = sigCross
   df <-bind_rows(df1, df2) %>% 
     filter(!is.na(.data[[phenotypeScoreNormalized]]))
   
-  blups <- lmer(as.formula(paste0(phenotypeSpatial, ' ~ environment + (1|genotype)')), data = performanceData) 
-  blups <- ranef(blups)
-  blups <- as_tibble(blups$genotype, rownames = 'genotype') %>%
-    rename(blup = `(Intercept)`) %>%
-    mutate(rank = dense_rank(blup)) %>%
+  blues <- lm(as.formula(paste0(phenotypeSpatial, ' ~ environment + genotype')), data = performanceData) 
+  blues <- blues$coefficients
+  blues <- as_tibble(blues, rownames = 'genotype') %>%
+    filter(str_detect(genotype, 'genotype')) %>%
+    rename(blue = `(Intercept)`) %>%
+    mutate(rank = dense_rank(blue)) %>%
     select(genotype, rank)
   
-  df <- left_join(df, blups, join_by(genotype1==genotype), keep = FALSE, suffix = c('', ''), relationship = 'many-to-one') %>%
+  df <- left_join(df, blues, join_by(genotype1==genotype), keep = FALSE, suffix = c('', ''), relationship = 'many-to-one') %>%
     rename(rankG1 = rank) %>%
-    left_join(blups, join_by(genotype2==genotype), keep = FALSE, suffix = c('', '')) %>%
+    left_join(blues, join_by(genotype2==genotype), keep = FALSE, suffix = c('', '')) %>%
     rename(rankG2 = rank) %>%
     # filter(!is.na(.data[[phenotypeScoreNormalized]]))
     select(c(genotype1, genotype2, rankG1, rankG2, all_of(phenotypeScoreNormalized)))
