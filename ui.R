@@ -18,9 +18,9 @@ shinyUI
     
     mainPanel
     (
+      imageOutput("interactionImportanceScoreExample"),
       # Display running message
       textOutput("runningMessage"),
-      imageOutput("interactionImportanceScoreExample", height='100%'),
       plotOutput("interactionImportanceGrid"), 
       dataTableOutput("importantInteractions")
     )

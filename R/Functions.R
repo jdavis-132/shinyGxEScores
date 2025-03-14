@@ -3,7 +3,7 @@ library(lme4)
 library(viridis)
 # Modifies dataframe genotypePairs with columns genotype1 and genotype2 at a minimum that identify all pairwise comparisons between genotypes
 # Remove dashes from genotype names before using so we can split the comparisons in the tukey step
-getSignificantCrossovers <- function(data, pheno, environments, genotypePairs)
+getSignificantCrossovers <- function(data, pheno, environment, genotypePairs)
 {
   phenotype <- paste0(pheno)
   phenotypeMean <- paste0(pheno, 'Mean')
@@ -13,14 +13,14 @@ getSignificantCrossovers <- function(data, pheno, environments, genotypePairs)
   phenotypeRankChange <- paste0(pheno, 'RC')
   phenotypeScore <- paste0(pheno, 'Score')
   phenotypeComparedEnvs <- paste0(pheno, 'ComparedEnvs')
-  envs <- unique(data[[environments]])
+  envs <- unique(data[[environment]])
   totalEnvironments <- length(envs)
   for(env in envs)
   {
     envSuffix <- paste0('.E', env)
 
     environmentData <- data %>%
-      filter(.data[[environments]]==env) %>%
+      filter(.data[[environment]]==env) %>%
       select(genotype, all_of(phenotype))
     environmentData <- environmentData[complete.cases(environmentData), ]
 
@@ -38,7 +38,7 @@ getSignificantCrossovers <- function(data, pheno, environments, genotypePairs)
       select(c(genotypes, genotype1, genotype2,  all_of(c(phenotypeAdjustedP, phenotypeSigDiff))))
 
     environmentDataSummary <- data %>%
-      filter(.data[[environments]]==env) %>%
+      filter(.data[[environment]]==env) %>%
       group_by(genotype) %>%
       summarise('{phenotypeMean}' := mean(.data[[phenotype]], na.rm = TRUE)) %>%
       mutate('{phenotypeRank}' := dense_rank(desc(.data[[phenotypeMean]]))) %>%
@@ -65,7 +65,7 @@ getSignificantCrossovers <- function(data, pheno, environments, genotypePairs)
       filter(!is.na(genotype1) & !is.na(genotype2))
   }
 
-  cols <- colnames(genotypePairs)
+  # cols <- colnames(genotypePairs)
   for(i in 1:(totalEnvironments - 1))
   {
     envI <- envs[i]
@@ -75,7 +75,7 @@ getSignificantCrossovers <- function(data, pheno, environments, genotypePairs)
     envIG2Rank <- paste0(phenotypeRank, envISuffix, '.G2')
     envISigDiff <- paste0(phenotypeSigDiff, envISuffix)
 
-    if(length(setdiff(c(envISigDiff, envIG1Rank, envIG2Rank), cols)) > 0){next}
+    # if(length(setdiff(c(envISigDiff, envIG1Rank, envIG2Rank), cols)) > 0){next}
 
     for(j in (i + 1):totalEnvironments)
     {
@@ -86,7 +86,7 @@ getSignificantCrossovers <- function(data, pheno, environments, genotypePairs)
       envJG2Rank <- paste0(phenotypeRank, envJSuffix, '.G2')
       envJSigDiff <- paste0(phenotypeSigDiff, envJSuffix)
 
-      if(length(setdiff(c(envJSigDiff, envJG1Rank, envJG2Rank), cols)) > 0){next}
+      # if(length(setdiff(c(envJSigDiff, envJG1Rank, envJG2Rank), cols)) > 0){next}
 
       envPairSuffix <- paste0('.E', envI, '-', envJ)
       envPairRankChange <- paste0(phenotypeRankChange, envPairSuffix)
