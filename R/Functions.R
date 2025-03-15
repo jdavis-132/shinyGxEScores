@@ -1,5 +1,7 @@
-library(tidyverse)
-library(lm)
+library(stringr)
+library(dplyr)
+library(tidyr)
+library(tibble)
 library(viridis)
 # Modifies dataframe genotypePairs with columns genotype1 and genotype2 at a minimum that identify all pairwise comparisons between genotypes
 # Remove dashes from genotype names before using so we can split the comparisons in the tukey step
@@ -136,26 +138,20 @@ plotInteractionImportanceGrid <- function(significantInteractionsData = sigCross
   blues <- blues$coefficients
   blues <- as_tibble(blues, rownames = 'genotype') %>%
     filter(str_detect(genotype, 'genotype')) %>%
-    rename(blue = `(Intercept)`) %>%
+    rename(blue = value) %>%
     mutate(rank = dense_rank(blue)) %>%
+    rowwise() %>% 
+    mutate(genotype = str_remove(genotype, 'genotype')) %>%
     select(genotype, rank)
   
   df <- left_join(df, blues, join_by(genotype1==genotype), keep = FALSE, suffix = c('', ''), relationship = 'many-to-one') %>%
     rename(rankG1 = rank) %>%
     left_join(blues, join_by(genotype2==genotype), keep = FALSE, suffix = c('', '')) %>%
     rename(rankG2 = rank) %>%
-    # filter(!is.na(.data[[phenotypeScoreNormalized]]))
     select(c(genotype1, genotype2, rankG1, rankG2, all_of(phenotypeScoreNormalized)))
   
   heatmap <- ggplot(df, aes(rankG1, rankG2, fill = .data[[phenotypeScoreNormalized]])) + 
     geom_tile() + 
-    scale_x_continuous(limits = c(0, 120)#, 
-                       # breaks = seq.int(0, 120, by = 2)
-    ) +
-    scale_y_continuous(limits = c(0, 120)#, 
-                       # breaks = seq.int(0, 120, by = 2)
-    ) +
-    # guides(fill = guide_colourbar(barheight = 0.5)) +
     scale_fill_viridis(direction = -1) +
     labs(x = 'Hybrid Rank', y = 'Hybrid Rank', fill = legendTitle, title = phenotypeLabel) + 
     theme_minimal() +
