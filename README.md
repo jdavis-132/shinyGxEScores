@@ -11,3 +11,5 @@ if (!require('shiny'))
 library('shiny')
 runGitHub('shinyGxEScores', 'jdavis-132', launch.browser=TRUE)
 ```
+## To see it hosted on AWS: 
+Go to http://13.58.27.199:3838/shinyGxEScores/. 
