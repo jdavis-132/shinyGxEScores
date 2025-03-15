@@ -3,6 +3,7 @@ library(dplyr)
 library(tidyr)
 library(tibble)
 library(viridis)
+library(ggplot2)
 # Modifies dataframe genotypePairs with columns genotype1 and genotype2 at a minimum that identify all pairwise comparisons between genotypes
 # Remove dashes from genotype names before using so we can split the comparisons in the tukey step
 getSignificantCrossovers <- function(data, pheno, environment, genotypePairs)

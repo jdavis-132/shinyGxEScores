@@ -4,6 +4,7 @@ library(readr)
 library(dplyr)
 library(stringr)
 library(tidyr)
+library(ggplot2)
 source('R/Functions.R')
 
 shinyServer
